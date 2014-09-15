@@ -2,8 +2,8 @@ Url      = require "url"
 Path     = require "path"
 ###########################################################################
 class ApiConfig
-  constructor: (@userToken, @application) ->
-    @token = @apiToken()
+  constructor: (@chatUser, @application) ->
+    @token = @chatUser.githubDeployToken
 
     @parsedApiUrl = Url.parse(@apiUri())
     @hostname     = @parsedApiUrl.host
@@ -14,7 +14,14 @@ class ApiConfig
       'https://api.github.com'
 
   apiToken: ->
-    (@application? and @application['github_token']) or @userToken
+    (@application? and @application['github_token']) or @chatUserGitHubToken
+
+  chatUserGitHubToken: ->
+    tokenConfig = @chatUser.githubDeployTokens
+    if tokenConfig? and tokenConfig[@hostname]?
+      tokenConfig[@hostname]
+    else
+      @chatUser.githubDeployToken
 
   filterPaths: ->
     newArr = @pathParts().filter (word) -> word isnt ""

@@ -54,11 +54,11 @@ class Deployment
         adapter: @adapter
       config: @application
 
-  setUserToken: (token) ->
-    @userToken = token.trim()
+  setChatUser: (chatUser) ->
+    @chatUser = chatUser
 
   apiConfig: ->
-    new ApiConfig(@userToken, @application)
+    new ApiConfig(@chatUser, @application)
 
   api: ->
     api = Octonode.client(@apiConfig().token, { hostname: @apiConfig().hostname })
