@@ -2,7 +2,7 @@
 #   Enable deployments from chat that correctly attribute you as the creator - https://github.com/atmos/hubot-deploy
 #
 # Commands:
-#   hubot deploy-token:set <token> - Sets your user's deployment token. Requires repo_deployment scope.
+#   hubot deploy-token:set - Set your user's deployment token. You'll get a private message with a URL to set the token.
 #   hubot deploy-token:reset - Resets your user's deployment token. Requires repo_deployment scope.
 #
 supported_tasks = [ "#{DeployPrefix}-token" ]
