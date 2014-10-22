@@ -62,8 +62,12 @@ module.exports = (robot) ->
     force = msg.match[2] == '!'
     name  = msg.match[3]
     ref   = (msg.match[4]||'master')
-    env   = (msg.match[5]||'production')
+    env   = msg.match[5]
     hosts = (msg.match[6]||'')
+    
+    unless env?
+      msg.reply "You need to specify an environment"
+      return
 
     username = msg.envelope.user.githubLogin or msg.envelope.user.name
 
@@ -80,8 +84,11 @@ module.exports = (robot) ->
       return
 
     user = robot.brain.userForId msg.envelope.user.id
-    if user? and user.githubDeployToken?
-      deployment.setUserToken(user.githubDeployToken)
+    unless user? and user.githubDeployToken?
+      msg.reply "You need to set your deploy token, use the 'deploy-token:set' command"
+      return
+    
+    deployment.setUserToken(user.githubDeployToken)
 
     deployment.user = username
     deployment.room = msg.message.user.room
