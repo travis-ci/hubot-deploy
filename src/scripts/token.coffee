@@ -43,7 +43,7 @@ module.exports = (robot) ->
       verifier = new TokenVerifier(req.param 'token')
       verifier.valid (result) ->
         if result
-          robot.messageRoom userId, "Your token is valid. I stored it for future use."
           user.githubDeployToken = verifier.token
+          robot.messageRoom userId, "Your token is valid. I stored it for future use."
         else
           robot.messageRoom userId, "Your token is invalid, verify that it has 'repo_deployment' scope."
