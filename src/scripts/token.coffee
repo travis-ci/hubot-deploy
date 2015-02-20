@@ -23,6 +23,7 @@ module.exports = (robot) ->
   robot.respond ///#{DeployPrefix}-token:set///i, (msg) ->
     user = robot.brain.userForId msg.envelope.user.id
     user.verifyToken = uuid.v4()
+    robot.logger.info "user: #{user}\nid: #{user.id}\nroom: #{msg.envelope.user.id}"
     robot.messageRoom msg.envelope.user.id, "Enter your token here: " + HerokuUrl + "/hubot-deploy/token?verify_token=" + user.verifyToken + "&user_id=" + msg.envelope.user.id
 
   robot.respond ///#{DeployPrefix}-token:reset///i, (msg) ->
