@@ -24,7 +24,7 @@ module.exports = (robot) ->
     user = robot.brain.userForId msg.envelope.user.id
     user.verifyToken = uuid.v4()
     robot.logger.info "user: #{user}\nid: #{user.id}\nroom: #{msg.envelope.user.id}"
-    robot.messageRoom {room: msg.envelope.user.name}, "Enter your token here: " + HerokuUrl + "/hubot-deploy/token?verify_token=" + user.verifyToken + "&user_id=" + msg.envelope.user.id
+    robot.send {room: msg.envelope.user.name}, "Enter your token here: " + HerokuUrl + "/hubot-deploy/token?verify_token=" + user.verifyToken + "&user_id=" + msg.envelope.user.id
 
   robot.respond ///#{DeployPrefix}-token:reset///i, (msg) ->
     user = robot.brain.userForId msg.envelope.user.id
@@ -44,6 +44,6 @@ module.exports = (robot) ->
       verifier.valid (result) ->
         if result
           user.githubDeployToken = verifier.token
-          robot.messageRoom {room: user.name}, "Your token is valid. I stored it for future use."
+          robot.send {room: user.name}, "Your token is valid. I stored it for future use."
         else
-          robot.messageRoom {room: user.name}, "Your token is invalid, verify that it has 'repo_deployment' scope."
+          robot.send {room: user.name}, "Your token is invalid, verify that it has 'repo_deployment' scope."
