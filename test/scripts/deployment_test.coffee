@@ -3,6 +3,7 @@ Path          = require "path"
 Robot         = require "hubot/src/robot"
 TextMessage   = require("hubot/src/message").TextMessage
 Verifiers     = require(Path.join(__dirname, "..", "..", "src", "models", "verifiers"))
+TokenForBrain = Verifiers.VaultKey
 
 describe "Deploying from chat", () ->
   user  = null
@@ -25,6 +26,7 @@ describe "Deploying from chat", () ->
 
       user    = robot.brain.userForId "1", userInfo
       adapter = robot.adapter
+      robot.vault.forUser(user).set(TokenForBrain, "fake-token")
 
       done()
 
@@ -43,14 +45,4 @@ describe "Deploying from chat", () ->
       assert.equal "production", deployment.env
       done()
 
-    adapter.receive(new TextMessage(user, "Hubot deploy hubot-deploy"))
-
-  it "allows for the default environment to be overridden by an env var", (done) ->
-    process.env.HUBOT_DEPLOY_DEFAULT_ENVIRONMENT = "staging"
-    VCR.play '/repos-atmos-hubot-deploy-deployment-staging-create-success'
-    robot.on "github_deployment", (msg, deployment) ->
-      assert.equal "hubot-deploy", deployment.name
-      assert.equal "staging", deployment.env
-      done()
-
-    adapter.receive(new TextMessage(user, "Hubot deploy hubot-deploy"))
+    adapter.receive(new TextMessage(user, "Hubot deploy hubot-deploy to production"))
