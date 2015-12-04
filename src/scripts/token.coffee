@@ -24,7 +24,7 @@ TokenForBrain    = Verifiers.VaultKey
 ApiTokenVerifier = Verifiers.ApiTokenVerifier
 ###########################################################################
 module.exports = (robot) ->
-  robot.respond ///#{DeployPrefix}-token:set///i, (msg) ->
+  robot.respond ///#{DeployPrefix}-token:set:github///i, (msg) ->
     user = robot.brain.userForId msg.envelope.user.id
     user.verifyToken = uuid.v4()
     robot.logger.info "user: #{user}\nid: #{user.id}\nroom: #{msg.envelope.user.id}"
