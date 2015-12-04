@@ -1,6 +1,6 @@
 Path = require('path')
 
-Patterns = require(Path.join(__dirname, "..", "src", "patterns"))
+Patterns = require(Path.join(__dirname, "..", "..", "src", "models", "patterns"))
 
 DeployPattern  = Patterns.DeployPattern
 DeploysPattern = Patterns.DeploysPattern
@@ -58,7 +58,8 @@ describe "Patterns", () ->
       assert.equal "hubot",       matches[3], "incorrect app name"
       assert.equal undefined,     matches[4], "incorrect branch name"
       assert.equal "production",  matches[5], "incorrect environment name"
-      assert.equal "fe",          matches[6], "incorrect branch name"
+      assert.equal "fe",          matches[6], "incorrect host name"
+      assert.equal undefined,     matches[7], "incorrect yubikey pattern"
 
     it "handles branch deploys with slashes and environments with hosts", () ->
       matches = "deploy hubot/atmos/branch to production/fe".match(DeployPattern)
@@ -66,7 +67,30 @@ describe "Patterns", () ->
       assert.equal "hubot",        matches[3], "incorrect app name"
       assert.equal "atmos/branch", matches[4], "incorrect branch name"
       assert.equal "production",   matches[5], "incorrect environment name"
-      assert.equal "fe",           matches[6], "incorrect branch name"
+      assert.equal "fe",           matches[6], "incorrect host name"
+      assert.equal undefined,      matches[7], "incorrect yubikey pattern"
+
+    it "handles branch deploys with slashes and environments with hosts plus yubikeys", () ->
+      matches = "deploy hubot/atmos/branch to production/fe ccccccdlnncbtuevhdbctrccukdciveuclhbkvehbeve".match(DeployPattern)
+      assert.equal "deploy",       matches[1], "incorrect task"
+      assert.equal "hubot",        matches[3], "incorrect app name"
+      assert.equal "atmos/branch", matches[4], "incorrect branch name"
+      assert.equal "production",   matches[5], "incorrect environment name"
+      assert.equal "fe",           matches[6], "incorrect host name"
+      assert.equal "ccccccdlnncbtuevhdbctrccukdciveuclhbkvehbeve", matches[7], "incorrect yubikey pattern"
+
+    it "handles branch deploys with slashes and environments with hosts plus 2fa keys", () ->
+      matches = "deploy hubot/atmos/branch to production/fe 123456".match(DeployPattern)
+      assert.equal "deploy",       matches[1], "incorrect task"
+      assert.equal "hubot",        matches[3], "incorrect app name"
+      assert.equal "atmos/branch", matches[4], "incorrect branch name"
+      assert.equal "production",   matches[5], "incorrect environment name"
+      assert.equal "fe",           matches[6], "incorrect host name"
+      assert.equal "123456",       matches[7], "incorrect authenticator token"
+
+    it "doesn't match on malformed yubikeys", () ->
+      matches = "deploy hubot/atmos/branch to production/fe burgers".match(DeployPattern)
+      assert.equal null, matches
 
     it "does not match typos", () ->
       matches = "deploy hubot/branch tos taging".match(DeployPattern)

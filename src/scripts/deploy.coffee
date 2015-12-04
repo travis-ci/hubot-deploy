@@ -11,13 +11,19 @@ supported_tasks = [ DeployPrefix ]
 
 Path          = require("path")
 Version       = require(Path.join(__dirname, "..", "version")).Version
-Patterns      = require(Path.join(__dirname, "..", "patterns"))
-Deployment    = require(Path.join(__dirname, "..", "deployment")).Deployment
-Formatters    = require(Path.join(__dirname, "..", "formatters"))
+Patterns      = require(Path.join(__dirname, "..", "models", "patterns"))
+Deployment    = require(Path.join(__dirname, "..", "models", "deployment")).Deployment
+Formatters    = require(Path.join(__dirname, "..", "models", "formatters"))
 
 DeployPrefix   = Patterns.DeployPrefix
 DeployPattern  = Patterns.DeployPattern
 DeploysPattern = Patterns.DeploysPattern
+
+Verifiers     = require(Path.join(__dirname, "..", "models", "verifiers"))
+TokenForBrain = Verifiers.VaultKey
+
+defaultDeploymentEnvironment = () ->
+  process.env.HUBOT_DEPLOY_DEFAULT_ENVIRONMENT || 'production'
 
 ###########################################################################
 module.exports = (robot) ->
@@ -32,9 +38,10 @@ module.exports = (robot) ->
       deployment = new Deployment(name)
       formatter  = new Formatters.WhereFormatter(deployment)
 
-      msg.send formatter.message()
+      robot.emit "hubot_deploy_available_environments", msg, deployment, formatter
+
     catch err
-      console.log err
+      robot.logger.info "Exploded looking for deployment locations: #{err}"
 
   ###########################################################################
   # deploys <app> in <env>
@@ -42,16 +49,22 @@ module.exports = (robot) ->
   # Displays the available environments for an application
   robot.respond DeploysPattern, (msg) ->
     name        = msg.match[2]
-    environment = msg.match[4] || 'production'
+    environment = msg.match[4] || defaultDeploymentEnvironment()
 
     try
       deployment = new Deployment(name, null, null, environment)
-      deployment.latest (deployments) ->
+
+      user = robot.brain.userForId msg.envelope.user.id
+      token = robot.vault.forUser(user).get(TokenForBrain)
+      if token?
+        deployment.setUserToken(token)
+
+      deployment.latest (err, deployments) ->
         formatter = new Formatters.LatestFormatter(deployment, deployments)
-        msg.send formatter.message()
+        robot.emit "hubot_deploy_recent_deployments", msg, deployment, deployments, formatter
 
     catch err
-      console.log err
+      robot.logger.info "Exploded looking for recent deployments: #{err}"
 
   ###########################################################################
   # deploy hubot/topic-branch to staging
@@ -64,7 +77,8 @@ module.exports = (robot) ->
     ref   = (msg.match[4]||'master')
     env   = msg.match[5]
     hosts = (msg.match[6]||'')
-    
+    yubikey = msg.match[7]
+
     unless env?
       msg.reply "You need to specify an environment"
       return
@@ -84,24 +98,33 @@ module.exports = (robot) ->
       return
 
     user = robot.brain.userForId msg.envelope.user.id
-    unless user? and user.githubDeployToken?
+    token = robot.vault.forUser(user).get(TokenForBrain)
+    if token?
+      deployment.setUserToken(token)
+    else
       msg.reply "You need to set your deploy token, use the 'deploy-token:set' command"
       return
-    
-    deployment.setUserToken(user.githubDeployToken)
 
-    deployment.user = username
-    deployment.room = msg.message.user.room
+    deployment.user   = user.id
+    deployment.room   = msg.message.user.room
 
-    if robot.adapterName == 'flowdock'
-      deployment.message_thread = msg.message.user.message || msg.message.user.thread_id
+    if robot.adapterName is "flowdock"
+      deployment.threadId = msg.message.metadata.thread_id
+      deployment.messageId = msg.message.id
 
-    deployment.adapter = robot.adapterName
+    if robot.adapterName is "hipchat"
+      if msg.envelope.user.reply_to?
+        deployment.room = msg.envelope.user.reply_to
 
-    console.log JSON.stringify(deployment.requestBody())
+    deployment.yubikey   = yubikey
+    deployment.adapter   = robot.adapterName
+    deployment.robotName = robot.name
 
-    deployment.post (responseMessage) ->
-      msg.reply responseMessage if responseMessage?
+    if process.env.HUBOT_DEPLOY_EMIT_GITHUB_DEPLOYMENTS
+      robot.emit "github_deployment", msg, deployment
+    else
+      deployment.post (err, status, body, headers, responseMessage) ->
+        msg.reply responseMessage if responseMessage?
 
   ###########################################################################
   # deploy:version

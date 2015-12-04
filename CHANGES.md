@@ -1,3 +1,8 @@
+0.7.1
+=====
+* Support incoming deployment status hooks. Emit events that can be handled programatically in the bot.
+
+
 0.7.0
 =====
 
@@ -7,6 +12,7 @@
 * The `task` attribute is first class and not in the payload anymore.
 * Support recent deployments listing in chat `/deploys hubot`
 * Support required_contexts in deployment API
+* Use user tokens if present for fetching recent deployments
 
 0.6.x
 =====
