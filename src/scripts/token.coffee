@@ -20,13 +20,13 @@ DeploysPattern = Patterns.DeploysPattern
 TokenVerifier  = require(Path.join(__dirname, "..", "token_verifier")).TokenVerifier
 ###########################################################################
 module.exports = (robot) ->
-  robot.respond ///#{DeployPrefix}-token:set///i, (msg) ->
+  robot.respond ///#{DeployPrefix}-token:set///i, id:'deploy.token-set', (msg) ->
     user = robot.brain.userForId msg.envelope.user.id
     user.verifyToken = uuid.v4()
     robot.logger.info "user: #{user}\nid: #{user.id}\nroom: #{msg.envelope.user.id}"
     robot.send {room: msg.envelope.user.name}, "Enter your token here: " + HerokuUrl + "/hubot-deploy/token?verify_token=" + user.verifyToken + "&user_id=" + msg.envelope.user.id
 
-  robot.respond ///#{DeployPrefix}-token:reset///i, (msg) ->
+  robot.respond ///#{DeployPrefix}-token:reset///i, id:'deploy.token-reset', (msg) ->
     user = robot.brain.userForId msg.envelope.user.id
     delete(user.githubDeployToken)
     msg.reply "I nuked your deployment token. I'll use my default token until you configure another."
