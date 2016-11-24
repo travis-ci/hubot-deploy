@@ -72,7 +72,7 @@ module.exports = (robot) ->
       catch err
         robot.logger.error err
         res.writeHead 500, {'content-type': 'application/json' }
-        return res.end(JSON.stringify({error: "Something went crazy processing the request."}))
+        return res.end(JSON.stringify({error: "Something went wrong processing the request."}))
 
   else if process.env.NODE_ENV is not "test"
     robot.logger.error "You're using hubot-deploy without specifying the shared webhook secret"
